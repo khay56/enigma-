@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio e Mapa</title>
+    <style>
+        body {
+            background-color: black;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+        }
+
+        /* Centralizando a tela de pergunta */
+        #pergunta-container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input {
+            padding: 8px;
+            margin: 10px;
+            width: 200px;
+            text-align: center;
+        }
+
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #erro {
+            display: none;
+            color: red;
+            margin-top: 10px;
+        }
+
+        /* Centralizando o quebra-cabeça */
+        #mapa-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #puzzle {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            border: 2px solid white;
+            padding: 10px;
+            background-color: #222;
+        }
+
+        .peca {
+            width: 100px;
+            height: 100px;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: grab;
+            border: 1px solid white;
+        }
+
+        .slot {
+            width: 100px;
+            height: 100px;
+            border: 1px dashed white;
+        }
+    </style>
+</head>
+<body>
+    <div id="pergunta-container">
+        <h2>Qual é a senha secreta?</h2>
+        <input type="text" id="resposta" placeholder="Digite sua resposta">
+        <button onclick="verificarResposta()">Enviar</button>
+        <p id="erro">Resposta incorreta! Tente novamente.</p>
+    </div>
+
+    <div id="mapa-container">
+        <h2>Monte o Mapa</h2>
+        <div id="puzzle"></div>
+    </div>
+
+    <script>
+        function verificarResposta() {
+            const resposta = document.getElementById("resposta").value.toLowerCase();
+            const respostasCorretas = ["chave", "portal", "mistério"];
+
+            if (respostasCorretas.includes(resposta)) {
+                document.getElementById("pergunta-container").style.display = "none"; // Esconde pergunta
+                document.getElementById("mapa-container").style.display = "flex"; // Mostra o quebra-cabeça
+                iniciarQuebraCabeca();
+            } else {
+                document.getElementById("erro").style.display = "block";
+            }
+        }
+
+        function iniciarQuebraCabeca() {
+            const puzzle = document.getElementById("puzzle");
+            puzzle.innerHTML = ""; // Limpa o tabuleiro antes de adicionar peças
+
+            const pecas = [];
+            const slots = [];
+
+            // Criando peças do quebra-cabeça
+            for (let i = 0; i < 9; i++) {
+                // Criando espaço para encaixe
+                const slot = document.createElement("div");
+                slot.classList.add("slot");
+                slot.dataset.index = i;
+
+                slot.addEventListener("dragover", (e) => e.preventDefault());
+
+                slot.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    const draggedIndex = e.dataTransfer.getData("text");
+                    const draggedPiece = document.querySelector(`.peca[data-index='${draggedIndex}']`);
+
+                    if (!slot.firstChild) { // Só permite soltar se o slot estiver vazio
+                        slot.appendChild(draggedPiece);
+                        checkCompletion();
+                    }
+                });
+
+                puzzle.appendChild(slot);
+                slots.push(slot);
+            }
+
+            for (let i = 0; i < 9; i++) {
+                const peca = document.createElement("div");
+                peca.classList.add("peca");
+                peca.style.backgroundImage = `url('./mapa${i + 1}.png')`; // Agora usa PNG
+                peca.draggable = true;
+                peca.dataset.index = i;
+
+                // Eventos de arrastar
+                peca.addEventListener("dragstart", (e) => {
+                    e.dataTransfer.setData("text", e.target.dataset.index);
+                });
+
+                pecas.push(peca);
+            }
+
+            // Embaralha as peças e adiciona no tabuleiro
+            pecas.sort(() => Math.random() - 0.5);
+            pecas.forEach(peca => puzzle.appendChild(peca));
+        }
+
+        function checkCompletion() {
+            const slots = document.querySelectorAll(".slot");
+            let correto = true;
+
+            slots.forEach((slot, i) => {
+                const peca = slot.firstChild;
+                if (!peca || peca.dataset.index != i) {
+                    correto = false;
+                }
+            });
+
+            if (correto) {
+                alert("Parabéns! Você montou o mapa corretamente!");
+            }
+        }
+    </script>
+</body>
+</html>
